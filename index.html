@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Sistema de Predicción Cardíaca</title>
+</head>
+<body>
+
+<header>
+    <h1>Sistema Inteligente de Predicción Cardíaca</h1>
+    <p class="sub">Análisis clínico mediante Regresión Logística y Redes Neuronales</p>
+</header>
+
+<div class="tabs">
+    <button class="tab active" onclick="mostrarTab('prediccion',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 20h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h2"/><path d="M17 4h2a2 2 0 0 1 2 2v3.5"/><path d="M9 3h6v4h-6z"/><path d="M16 19h6"/><path d="M19 16v6"/></svg>
+        Predicción Individual
+    </button>
+    <button class="tab" onclick="mostrarTab('lote',this)">
+        <svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M9 17l2 2l4 -4"/></svg>
+        Predicción por Lote
+    </button>
+    <button class="tab" onclick="mostrarTab('metricas',this)">
+        <svg viewBox="0 0 24 24"><path d="M4 19l16 0"/><path d="M4 15l4 -6l4 2l4 -5l4 4"/></svg>
+        Métricas
+    </button>
+</div>
+
+<!-- PREDICCION INDIVIDUAL -->
+<div id="tab-prediccion" class="tab-content active">
+    <div class="card">
+        <h2>
+            <svg viewBox="0 0 24 24"><path d="M19.5 13.572l-7.5 7.428l-7.5 -7.428m0 0a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/></svg>
+            Datos del Paciente
+        </h2>
+        <p class="hint">Complete los datos clínicos. Use los sliders o ingrese el valor directamente.</p>
+
+        <div class="form-section">
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                Datos Personales
+            </h3>
+            <div class="form-grid">
+                <div class="campo">
+                    <label>Edad <span class="unidad">(años)</span></label>
+                    <div class="slider-wrap">
+                        <input type="range" id="age" min="20" max="90" value="50" oninput="syncNum('age','age_num')">
+                        <input type="number" id="age_num" value="50" min="20" max="90" oninput="syncRange('age_num','age')">
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Sexo</label>
+                    <select id="sex">
+                        <option value="1">Masculino</option>
+                        <option value="0">Femenino</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8l4 -16l3 8h4"/></svg>
+                Síntomas
+            </h3>
+            <div class="form-grid">
+                <div class="campo">
+                    <label>Tipo de dolor en el pecho</label>
+                    <select id="cp">
+                        <option value="0">0 — Angina típica</option>
+                        <option value="1">1 — Angina atípica</option>
+                        <option value="2">2 — Dolor no anginoso</option>
+                        <option value="3">3 — Asintomático</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Angina por ejercicio</label>
+                    <select id="exang">
+                        <option value="0">No</option>
+                        <option value="1">Sí</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Depresión ST <span class="unidad">(0 – 6.2)</span></label>
+                    <div class="slider-wrap">
+                        <input type="range" id="oldpeak" min="0" max="6.2" step="0.1" value="1.0" oninput="syncNum('oldpeak','oldpeak_num')">
+                        <input type="number" id="oldpeak_num" value="1.0" min="0" max="6.2" step="0.1" oninput="syncRange('oldpeak_num','oldpeak')">
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Pendiente segmento ST</label>
+                    <select id="slope">
+                        <option value="0">0 — Descendente</option>
+                        <option value="1">1 — Plana</option>
+                        <option value="2">2 — Ascendente</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/><path d="M9 3h6v4h-6z"/><path d="M9 12l2 2l4 -4"/></svg>
+                Signos Vitales y Laboratorio
+            </h3>
+            <div class="form-grid">
+                <div class="campo">
+                    <label>Presión arterial en reposo <span class="unidad">(mmHg)</span></label>
+                    <div class="slider-wrap">
+                        <input type="range" id="trestbps" min="80" max="200" value="130" oninput="syncNum('trestbps','trestbps_num')">
+                        <input type="number" id="trestbps_num" value="130" min="80" max="200" oninput="syncRange('trestbps_num','trestbps')">
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Colesterol sérico <span class="unidad">(mg/dl)</span></label>
+                    <div class="slider-wrap">
+                        <input type="range" id="chol" min="100" max="600" value="240" oninput="syncNum('chol','chol_num')">
+                        <input type="number" id="chol_num" value="240" min="100" max="600" oninput="syncRange('chol_num','chol')">
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Frecuencia cardíaca máxima <span class="unidad">(lpm)</span></label>
+                    <div class="slider-wrap">
+                        <input type="range" id="thalach" min="60" max="220" value="150" oninput="syncNum('thalach','thalach_num')">
+                        <input type="number" id="thalach_num" value="150" min="60" max="220" oninput="syncRange('thalach_num','thalach')">
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Azúcar en ayunas &gt; 120 mg/dl</label>
+                    <select id="fbs">
+                        <option value="0">No</option>
+                        <option value="1">Sí</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>
+                <svg viewBox="0 0 24 24"><path d="M9 3h-2a2 2 0 0 0 -2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-14a2 2 0 0 0 -2 -2h-2"/><path d="M9 3h6v4h-6z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+                Estudios Complementarios
+            </h3>
+            <div class="form-grid">
+                <div class="campo">
+                    <label>Electrocardiograma en reposo</label>
+                    <select id="restecg">
+                        <option value="0">0 — Normal</option>
+                        <option value="1">1 — Anormalidad ST-T</option>
+                        <option value="2">2 — Hipertrofia ventricular</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Vasos coloreados por fluoroscopía</label>
+                    <select id="ca">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Thal (defecto de talio)</label>
+                    <select id="thal">
+                        <option value="1">1 — Normal</option>
+                        <option value="2">2 — Defecto fijo</option>
+                        <option value="3">3 — Defecto reversible</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="botones-prediccion">
+            <button class="btn-primary" onclick="predecir('regresion')">
+                <svg viewBox="0 0 24 24"><path d="M4 19l16 0"/><path d="M4 15l4 -6l4 2l4 -5l4 4"/></svg>
+                Regresión Logística
+            </button>
+            <button class="btn-secondary" onclick="predecir('red')">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="1"/><circle cx="4" cy="20" r="1"/><circle cx="12" cy="20" r="1"/><circle cx="20" cy="20" r="1"/><path d="M12 5v5l-3 2"/><path d="M12 10l3 2"/><path d="M9 17l-4 2"/><path d="M9 17l3 2"/><path d="M15 17l1 2"/><path d="M15 17l4 2"/></svg>
+                Red Neuronal
+            </button>
+        </div>
+        <div id="resultadoIndividual" class="resultado" style="display:none;"></div>
+    </div>
+</div>
+
+<!-- LOTE -->
+<div id="tab-lote" class="tab-content">
+    <div class="card">
+        <h2>
+            <svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M9 17l2 2l4 -4"/></svg>
+            Predicción por Lote
+        </h2>
+        <p class="hint">Suba un archivo Excel (.xlsx) o CSV (.csv) con las columnas: <code>age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal</code></p>
+        <div class="lote-grid">
+            <div class="lote-box">
+                <h3>Regresión Logística</h3>
+                <label class="file-label">
+                    <input type="file" id="archivoRegresion" accept=".xlsx,.csv">
+                    <span>
+                        <svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M12 11v6"/><path d="M9.5 13.5l2.5 -2.5l2.5 2.5"/></svg>
+                        Seleccionar Excel o CSV
+                    </span>
+                </label>
+                <button class="btn-primary" onclick="predecirLote('regresion')">Analizar</button>
+                <div id="resultadoRegresionExcel" class="resultado"></div>
+            </div>
+            <div class="lote-box">
+                <h3>Red Neuronal</h3>
+                <label class="file-label">
+                    <input type="file" id="archivoRed" accept=".xlsx,.csv">
+                    <span>
+                        <svg viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M12 11v6"/><path d="M9.5 13.5l2.5 -2.5l2.5 2.5"/></svg>
+                        Seleccionar Excel o CSV
+                    </span>
+                </label>
+                <button class="btn-secondary" onclick="predecirLote('red')">Analizar</button>
+                <div id="resultadoRedExcel" class="resultado"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MÉTRICAS -->
+<div id="tab-metricas" class="tab-content">
+
+    <p class="metricas-info">// MÉTRICAS DE EVALUACIÓN (CONJUNTO DE PRUEBA)</p>
+
+    <div class="metricas-grid">
+
+        <!-- Regresión Logística -->
+        <div class="metrica-card">
+            <h3>
+                <span class="metrica-dot" style="background:#4ade80;"></span>
+                REGRESIÓN LOGÍSTICA
+            </h3>
+            <div class="barras-metricas">
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Accuracy</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:87%;background:#e0e0e0;"></div></div>
+                    <span class="metrica-val">87.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">F1 Score</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:87%;background:#e0e0e0;"></div></div>
+                    <span class="metrica-val">0.87</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Prec. (0)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:96%;background:#888;"></div></div>
+                    <span class="metrica-val">96.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Prec. (1)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:82%;background:#888;"></div></div>
+                    <span class="metrica-val">82.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Recall (0)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:76%;background:#555;"></div></div>
+                    <span class="metrica-val">76.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Recall (1)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:97%;background:#555;"></div></div>
+                    <span class="metrica-val">97.0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Red Neuronal -->
+        <div class="metrica-card">
+            <h3>
+                <span class="metrica-dot" style="background:#818cf8;"></span>
+                RED NEURONAL (MLP)
+            </h3>
+            <div class="barras-metricas">
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Accuracy</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:89%;background:#e0e0e0;"></div></div>
+                    <span class="metrica-val">89.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">F1 Score</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:88%;background:#e0e0e0;"></div></div>
+                    <span class="metrica-val">0.88</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Prec. (0)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:92%;background:#888;"></div></div>
+                    <span class="metrica-val">92.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Prec. (1)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:86%;background:#888;"></div></div>
+                    <span class="metrica-val">86.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Recall (0)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:83%;background:#555;"></div></div>
+                    <span class="metrica-val">83.0%</span>
+                </div>
+                <div class="metrica-row">
+                    <span class="metrica-nombre">Recall (1)</span>
+                    <div class="metrica-barra-bg"><div class="metrica-barra-fill" style="width:94%;background:#555;"></div></div>
+                    <span class="metrica-val">94.0%</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Matrices de Confusión -->
+    <p class="metricas-info" style="margin-top:28px;">// MATRICES DE CONFUSIÓN (ESTIMADAS CON TEST SET)</p>
+
+    <div class="metricas-grid">
+
+        <!-- Confusion RL -->
+        <div class="metrica-card">
+            <h3>
+                <span class="metrica-dot" style="background:#4ade80;"></span>
+                REGRESIÓN LOGÍSTICA
+            </h3>
+            <div class="confusion-wrap">
+                <table class="confusion">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PRED 0 (No Riesgo)</th>
+                            <th>PRED 1 (Riesgo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Real 0</th>
+                            <td class="tn cm-tn">22</td>
+                            <td class="fp cm-fp">7</td>
+                        </tr>
+                        <tr>
+                            <th>Real 1</th>
+                            <td class="fn cm-fn">1</td>
+                            <td class="tp cm-tp">31</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="cm-legend">
+                    <span>TN: predijo No Riesgo correctamente</span>
+                    <span>TP: predijo Riesgo correctamente</span>
+                </div>
+                <div class="cm-legend">
+                    <span>FP: falsos positivos</span>
+                    <span>FN: falsos negativos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confusion MLP -->
+        <div class="metrica-card">
+            <h3>
+                <span class="metrica-dot" style="background:#818cf8;"></span>
+                RED NEURONAL (MLP)
+            </h3>
+            <div class="confusion-wrap">
+                <table class="confusion">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>PRED 0 (No Riesgo)</th>
+                            <th>PRED 1 (Riesgo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Real 0</th>
+                            <td class="tn cm-tn">24</td>
+                            <td class="fp cm-fp">5</td>
+                        </tr>
+                        <tr>
+                            <th>Real 1</th>
+                            <td class="fn cm-fn">2</td>
+                            <td class="tp cm-tp">30</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="cm-legend">
+                    <span>TN: predijo No Riesgo correctamente</span>
+                    <span>TP: predijo Riesgo correctamente</span>
+                </div>
+                <div class="cm-legend">
+                    <span>FP: falsos positivos</span>
+                    <span>FN: falsos negativos</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
