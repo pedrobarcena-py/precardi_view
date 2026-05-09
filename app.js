@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "https://precardi.onrender.com";
 
 function mostrarTab(nombre, btn) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
